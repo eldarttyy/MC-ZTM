@@ -1,0 +1,46 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+# Nothing in this file is a secret — credentials come from the environment
+# (AWS_*, ARM_*, GOOGLE_APPLICATION_CREDENTIALS), never from tfvars.
+
+project_name = "mcztm"
+environment  = "dev"
+
+# Break-glass admin access. Use your actual egress IP, never 0.0.0.0/0.
+admin_cidrs = ["203.0.113.10/32"]
+
+# --- Cloud toggles -----------------------------------------------------------
+# Turn clouds off individually to stay inside free-tier limits while iterating.
+enable_aws   = true
+enable_azure = true
+enable_gcp   = true
+enable_entra = true
+
+# --- AWS ---------------------------------------------------------------------
+aws_region   = "us-east-1"
+aws_vpc_cidr = "10.100.0.0/16"
+
+# --- Azure / Entra ID --------------------------------------------------------
+azure_subscription_id = "00000000-0000-0000-0000-000000000000"
+entra_tenant_id       = "00000000-0000-0000-0000-000000000000"
+azure_location        = "eastus"
+azure_vnet_cidr       = "10.200.0.0/16"
+
+entra_group_prefix = "MCZTM-"
+
+# Users must already exist in the tenant.
+entra_group_members = {
+  cloud_admins         = ["admin@contoso.onmicrosoft.com"]
+  audit_team           = ["auditor@contoso.onmicrosoft.com"]
+  copilot_early_access = ["pilot@contoso.onmicrosoft.com"]
+}
+
+# Conditional Access. Leave report-only until you have reviewed the impact in
+# Entra > Conditional Access > Insights and workbooks.
+enable_conditional_access   = false
+conditional_access_state    = "enabledForReportingButNotEnforced"
+break_glass_user_object_ids = []
+
+# --- GCP ---------------------------------------------------------------------
+gcp_project_id = "mcztm-dev-000000"
+gcp_region     = "us-central1"
+gcp_vpc_cidr   = "10.30.0.0/16"
