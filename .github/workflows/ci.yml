@@ -1,0 +1,26 @@
+name: terraform
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Formatting
+        run: terraform -chdir=terraform fmt -check -recursive
+
+      # No credentials needed: init -backend=false + validate checks the
+      # configuration and every module's variable contracts on its own.
+      - name: Init (no backend)
+        run: terraform -chdir=terraform init -backend=false
+
+      - name: Validate
+        run: terraform -chdir=terraform validate
