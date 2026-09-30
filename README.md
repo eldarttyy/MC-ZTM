@@ -5,6 +5,9 @@ from one root module. The point is not that it deploys three clouds; it is that 
 **new site inherits the architecture on day one** instead of being hardened
 afterwards by whoever remembers to.
 
+> **Personal lab project.** Built and planned inside free-tier limits; not an
+> employer environment and no production tenant.
+
 ```
 terraform/
   main.tf                     root module; CIDR-overlap assertions, per-cloud toggles
@@ -12,7 +15,7 @@ terraform/
   modules/azure_network/      VNet, per-subnet NSGs, flow logs
   modules/gcp_network/        VPC, explicit deny backstops, VPC flow logs
   modules/entra_identity/     Entra ID groups, app roles, workload federation
-scripts/Audit-EntraUsers.ps1  dormant-account audit
+scripts/Audit-EntraUsers.ps1  MFA / privileged-group audit via Microsoft Graph
 ```
 
 ## What is enforced, not documented
@@ -37,6 +40,24 @@ scripts/Audit-EntraUsers.ps1  dormant-account audit
   overlap function, so the root module reduces each range to integer bounds and
   fails the plan on collision. That assertion is what keeps future peering, VPN
   attachment and Cloud WAN viable instead of discovering a conflict at migration.
+
+## Entra ID audit script
+
+`scripts/Audit-EntraUsers.ps1` (PowerShell 7, Microsoft Graph, read-only) answers
+the three questions a zero-trust review always asks:
+
+1. Which users can sign in with a single factor?
+2. Who is in the privileged cloud groups?
+3. Which privileged accounts are also the weakest (admin + no MFA)?
+
+It exports the result as JSON. `-FailOnUnprotectedAdmin` exits non-zero when a
+privileged-group member has no MFA method registered, so it can gate a pipeline.
+`-AppOnly` runs it with client credentials from the environment instead of an
+interactive sign-in.
+
+```powershell
+./scripts/Audit-EntraUsers.ps1 -TenantId <tenant-id> -OutputPath out/identity-report.json
+```
 
 ## Use
 
